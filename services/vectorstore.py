@@ -68,3 +68,10 @@ class VectorStoreService:
         
         return results["matches"]
         # Print the results
+
+    def delete_records(self,records):
+        index_name = "jobgenie-rag"
+        if pc.has_index(index_name):
+            for record in records:
+                dense_index = pc.Index(index_name)
+                dense_index.delete(ids=[str(record["_id"])], namespace="jobs-listings")

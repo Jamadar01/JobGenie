@@ -27,7 +27,7 @@ class JobScrapingService:
                 "country": "us",
                 "enableUniqueJobs": False,
                 "includeSimilarJobs": False,
-                "maxRows": 1,
+                "maxRows": 10,
                 "query": "Analyst"
             }
         },
@@ -79,3 +79,13 @@ class JobScrapingService:
         vector_store_service = VectorStoreService()
         vector_store=vector_store_service.create_index()
         return all_results
+    
+    def run_cleanup(self):
+        job_storage = JobStorage()
+        all_jobs = job_storage.get_all_jobs()
+        vector_store_service = VectorStoreService()
+        vector_store_service.delete_records(all_jobs)
+        for job in all_jobs:
+            job_storage.collection.delete_one({"_id": job["_id"]})
+        print("Cleanup MongoDb.")
+

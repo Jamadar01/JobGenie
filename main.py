@@ -2,12 +2,21 @@ from fastapi import FastAPI
 from services import vectorstore, resumeanalyser,jobscraping
 from pymongo import MongoClient
 import os
+from schedular.schedular import start_scheduler, stop_scheduler
+from contextlib import asynccontextmanager
 
 mongo_client = MongoClient(os.environ.get("MONGO_URI", "mongodb://localhost:27017/"))
 db = mongo_client["jobgenie"]          # database (created on first write)
 jobs_collection = db["jobs"]  
-app = FastAPI()
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    start_scheduler()      
+    yield
+    stop_scheduler()
+
+app = FastAPI(lifespan=lifespan)
 @app.get("/")
 def read_root():
     return {"message": "Welcome to JobGenie API!"}
@@ -44,3 +53,5 @@ def get_recommend_jobs():
     search_results = resume_analyser.recommend_jobs()
     print("insie route page")
     return search_results
+
+
